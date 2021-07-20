@@ -1,13 +1,9 @@
-﻿using MathNet.Numerics.LinearAlgebra.Generic;
-using MathNet.Numerics.LinearAlgebra.Single;
+﻿using MathNet.Numerics.LinearAlgebra.Single;
 using MathNet.Numerics.LinearAlgebra.Storage;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
+using MathNet.Numerics.LinearAlgebra;
 
 namespace knearest
 {
@@ -72,8 +68,8 @@ namespace knearest
                 buildPoints.Add(i);
             }
 
-            Vector<float> minBound = new DenseVector(cloud.RowCount);
-            Vector<float> maxBound = new DenseVector(cloud.RowCount);
+            Vector minBound = new DenseVector(cloud.RowCount);
+            Vector maxBound = new DenseVector(cloud.RowCount);
             for (int i = 0; i < cloud.ColumnCount; i++)
             {
                 for (int j = 0; j < cloud.RowCount; j++)
@@ -227,7 +223,7 @@ namespace knearest
         }
 
 
-        private int BuildNodes(List<int> buildPoints, int first, int last, Vector<float> minValues, Vector<float> maxValues)
+        private int BuildNodes(List<int> buildPoints, int first, int last, Vector minValues, Vector maxValues)
         {
             int count = last - first;
             Debug.Assert(count >= 1);
@@ -314,10 +310,10 @@ namespace knearest
             Debug.Assert(leftCount < count);
 
             // update bounds for left
-            Vector<float> leftMaxValues = maxValues.Clone();
+            Vector leftMaxValues = (Vector)maxValues.Clone();
             leftMaxValues[cutDim] = cutVal;
             // update bounds for right
-            Vector<float> rightMinValues = minValues.Clone();
+            Vector rightMinValues = (Vector)minValues.Clone();
             rightMinValues[cutDim] = cutVal;
 
             // add this
@@ -390,7 +386,7 @@ namespace knearest
             DenseColumnMajorMatrixStorage<float> dists2,
             int k,
             SearchOptionFlags optionFlags,
-            Vector<float> maxRadii)
+            Vector maxRadii)
         {
             if (k > cloud.ColumnCount)
                 throw new ArgumentException(string.Format("Requesting more points (%1%) than available in cloud (%2%)", k, cloud.ColumnCount));

@@ -1,19 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using MathNet.Numerics.LinearAlgebra.Generic;
-using MathNet.Numerics.LinearAlgebra.Single;
+﻿using MathNet.Numerics.LinearAlgebra.Single;
 using MathNet.Numerics.LinearAlgebra.Storage;
 
 namespace knearest
 {
     public class BruteForceNearestNeighbor : INearestNeighborSearch
     {
-        private Matrix<float> cloud;
+        private Matrix cloud;
 
-        public BruteForceNearestNeighbor(Matrix<float> cloud)
+        public BruteForceNearestNeighbor(Matrix cloud)
         {
             this.cloud = cloud;
         }
