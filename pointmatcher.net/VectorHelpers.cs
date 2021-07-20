@@ -30,12 +30,12 @@ namespace pointmatcher.net
             return sum;
         }
 
-        public static Vector3 ToVector3(MathNet.Numerics.LinearAlgebra.Generic.Vector<float> v)
+        public static Vector3 ToVector3(MathNet.Numerics.LinearAlgebra.Vector<float> v)
         {
             return new Vector3(v[0], v[1], v[2]);
         }
 
-        public static MathNet.Numerics.LinearAlgebra.Generic.Vector<float> ToVector(Vector3 v)
+        public static MathNet.Numerics.LinearAlgebra.Vector<float> ToVector(Vector3 v)
         {
             return new MathNet.Numerics.LinearAlgebra.Single.DenseVector(new[] { v.X, v.Y, v.Z });
         }

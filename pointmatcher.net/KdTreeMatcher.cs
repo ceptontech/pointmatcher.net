@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using knearest;
+﻿using knearest;
 using MathNet.Numerics.LinearAlgebra.Storage;
 using MathNet.Numerics.LinearAlgebra.Single;
-using MathNet.Numerics.LinearAlgebra.Generic;
+using MathNet.Numerics.LinearAlgebra;
 
 namespace pointmatcher.net
 {
@@ -47,12 +42,12 @@ namespace pointmatcher.net
             public Matches FindClosests(DataPoints filteredReading)
             {
                 int n = filteredReading.points.Length;
-                var results = DenseColumnMajorMatrixStorage<int>.OfInit(1, n, (i,j) => 0);
-                var resultDistances = DenseColumnMajorMatrixStorage<float>.OfInit(1, n, (i, j) => 0);
-                Vector<float> maxRadii = DenseVector.Create(n, i => this.maxDist);
+                DenseColumnMajorMatrixStorage<int> results = DenseColumnMajorMatrixStorage<int>.OfInit(1, n, (i, j) => 0);
+                DenseColumnMajorMatrixStorage<float> resultDistances = DenseColumnMajorMatrixStorage<float>.OfInit(1, n, (i, j) => 0);
+                Vector maxRadii = DenseVector.Create(n, i => this.maxDist);
 
-                var query = CreateCloudMatrix(filteredReading);
-                kdtree.knn(query, results, resultDistances, maxRadii, this.knn, this.epsilon, SearchOptionFlags.AllowSelfMatch);
+                DenseColumnMajorMatrixStorage<float> query = CreateCloudMatrix(filteredReading);
+                kdtree.knn(query, results, resultDistances, maxRadii, knn, epsilon, SearchOptionFlags.AllowSelfMatch);
                 return new Matches
                 {
                     Ids = results,

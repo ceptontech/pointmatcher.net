@@ -1,12 +1,7 @@
-﻿using MathNet.Numerics.LinearAlgebra.Generic;
-using MathNet.Numerics.LinearAlgebra.Single;
+﻿using MathNet.Numerics.LinearAlgebra;
 using MathNet.Numerics.LinearAlgebra.Storage;
-using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace pointmatcher.net
 {
@@ -23,19 +18,19 @@ namespace pointmatcher.net
     }
 
     public class Matches
-    {		
+    {
         /// <summary>
         /// Squared distances to closest points
         /// Columns represent different query points, rows are k matches
         /// </summary>
-		public DenseColumnMajorMatrixStorage<float> Dists;
+        public DenseColumnMajorMatrixStorage<float> Dists;
 
         /// <summary>
         /// Identifiers of closest points
         /// </summary>
 		public DenseColumnMajorMatrixStorage<int> Ids;
-		
-		public float GetDistsQuantile(float quantile)
+
+        public float GetDistsQuantile(float quantile)
         {
             float[] d = Dists.Data;
             int[] indices = Enumerable.Range(0, d.Length).ToArray();
@@ -89,7 +84,7 @@ namespace pointmatcher.net
     {
         public void Inspect(DataPoints pointSet, string name)
         {
-            
+
         }
     }
 }

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MathNet.Numerics.LinearAlgebra.Generic;
+using MathNet.Numerics.LinearAlgebra.Single;
 using MathNet.Numerics.LinearAlgebra.Storage;
 
 namespace knearest
@@ -21,7 +22,7 @@ namespace knearest
             DenseColumnMajorMatrixStorage<float> query,
             DenseColumnMajorMatrixStorage<int> indices,
             DenseColumnMajorMatrixStorage<float> dists2,
-            Vector<float> maxRadii,
+            Vector maxRadii,
             int k,
             float epsilon,
             SearchOptionFlags optionFlags)
@@ -39,7 +40,7 @@ namespace knearest
             int i,
             DenseColumnMajorMatrixStorage<int> indices,
             DenseColumnMajorMatrixStorage<float> dists2,
-            Vector<float> maxRadii,
+            Vector maxRadii,
             int k,
             float epsilon,
             SearchOptionFlags optionFlags)

@@ -3,14 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
-using MathNet.Numerics;
 using MathNet.Numerics.LinearAlgebra;
-using MathNet.Numerics.LinearAlgebra.Single;
-using MathNet.Numerics.LinearAlgebra.Generic;
-using MathNet.Numerics.LinearAlgebra.Generic.Factorization;
-using MathNet.Numerics.LinearAlgebra.Single.Factorization;
 
 namespace pointmatcher.net
 {
@@ -23,9 +16,9 @@ namespace pointmatcher.net
     public class SamplingSurfaceNormalDataPointsFilter : IDataPointsFilter
     {
         private float ratio;
-		private int knn;
-		private SamplingMethod samplingMethod; 
-		private float maxBoxDim;
+        private int knn;
+        private SamplingMethod samplingMethod;
+        private float maxBoxDim;
         private Random r = new Random();
 
         public SamplingSurfaceNormalDataPointsFilter(
@@ -51,14 +44,14 @@ namespace pointmatcher.net
                 pointsToKeep = new List<DataPoint>(),
                 unfitPointsCount = 0
             };
-	        // build the new point cloud
-	        buildNew(
-		        buildData,
-		        0,
-		        pointsCount,
-		        MinBound(input.points.Select(p => p.point)),
+            // build the new point cloud
+            buildNew(
+                buildData,
+                0,
+                pointsCount,
+                MinBound(input.points.Select(p => p.point)),
                 MaxBound(input.points.Select(p => p.point))
-	        );
+            );
 
             return new DataPoints
             {
@@ -74,49 +67,49 @@ namespace pointmatcher.net
         /// </summary>        
         void buildNew(BuildData data, int first, int last, Vector3 minValues, Vector3 maxValues)
         {
-	        int count = last - first;
-	        if (count <= knn)
-	        {
-		        // compute for this range
-		        fuseRange(data, first, last);
-		        // TODO: make another filter that creates constant-density clouds,
-		        // typically by stopping recursion after the median of the bounding cuboid
-		        // is below a threshold, or that the number of points falls under a threshold
-		        return;
-	        }
+            int count = last - first;
+            if (count <= knn)
+            {
+                // compute for this range
+                fuseRange(data, first, last);
+                // TODO: make another filter that creates constant-density clouds,
+                // typically by stopping recursion after the median of the bounding cuboid
+                // is below a threshold, or that the number of points falls under a threshold
+                return;
+            }
 
-	        // find the largest dimension of the box
-	        int cutDim = MaxDim(maxValues - minValues);
+            // find the largest dimension of the box
+            int cutDim = MaxDim(maxValues - minValues);
 
-	        // compute number of elements
-	        int rightCount = count/2;
-	        int leftCount = count - rightCount;
-	        Debug.Assert(last - rightCount == first + leftCount);
+            // compute number of elements
+            int rightCount = count / 2;
+            int leftCount = count - rightCount;
+            Debug.Assert(last - rightCount == first + leftCount);
 
-	        // select the cut point and partition the indices around it
+            // select the cut point and partition the indices around it
             var pts = data.points;
             QuickSelect.Select(data.indices, first, last - 1, first + leftCount, i => GetAt(data.points[i].point, cutDim));
 
-	        // get value
-	        int cutIndex = data.indices[first+leftCount];
-	        float cutVal = GetAt(data.points[cutIndex].point, cutDim);
+            // get value
+            int cutIndex = data.indices[first + leftCount];
+            float cutVal = GetAt(data.points[cutIndex].point, cutDim);
 
-	        // update bounds for left
-	        Vector3 leftMaxValues = SetAt(maxValues, cutDim, cutVal);
-	        // update bounds for right
-	        Vector3 rightMinValues = SetAt(minValues, cutDim, cutVal);
+            // update bounds for left
+            Vector3 leftMaxValues = SetAt(maxValues, cutDim, cutVal);
+            // update bounds for right
+            Vector3 rightMinValues = SetAt(minValues, cutDim, cutVal);
 
-	        // recurse
-	        buildNew(data, first, first + leftCount, minValues, leftMaxValues);
-	        buildNew(data, first + leftCount, last, rightMinValues, maxValues);
+            // recurse
+            buildNew(data, first, first + leftCount, minValues, leftMaxValues);
+            buildNew(data, first + leftCount, last, rightMinValues, maxValues);
         }
 
         void fuseRange(BuildData data, int first, int last)
         {
-	        int colCount = last-first;
-            
+            int colCount = last - first;
+
             var sum = Vector3.Zero;
-	        for (int i = 0; i < colCount; i++)
+            for (int i = 0; i < colCount; i++)
             {
                 sum += data.points[data.indices[first + i]].point;
             }
@@ -137,81 +130,81 @@ namespace pointmatcher.net
                 max = Vector3.Max(max, v);
             }
 
-	        Vector3 box = max - min;
-	        float boxDim = GetAt(box, MaxDim(box));
-	        // drop box if it is too large
-	        if (boxDim > maxBoxDim)
-	        {
-		        data.unfitPointsCount += colCount;
-		        return;
-	        }
-
-	        // compute covariance
-	        var C = NN.TransposeAndMultiply(NN);
-	        var eigen = C.Evd();
-	        // Ensure that the matrix is suited for eigenvalues calculation
-		    if(eigen.Rank < 2)
-		    {
+            Vector3 box = max - min;
+            float boxDim = GetAt(box, MaxDim(box));
+            // drop box if it is too large
+            if (boxDim > maxBoxDim)
+            {
                 data.unfitPointsCount += colCount;
-			    return;
-		    }
+                return;
+            }
 
-            var normal = computeNormal(eigen.EigenValues(), eigen.EigenVectors());
+            // compute covariance
+            var C = NN.TransposeAndMultiply(NN);
+            var eigen = C.Evd();
+            // Ensure that the matrix is suited for eigenvalues calculation
+            if (eigen.Rank < 2)
+            {
+                data.unfitPointsCount += colCount;
+                return;
+            }
 
-	        /*T densitie = 0;
+            var normal = computeNormal(eigen.EigenValues, eigen.EigenVectors);
+
+            /*T densitie = 0;
 	        if(keepDensities)
 		        densitie = SurfaceNormalDataPointsFilter::computeDensity(NN);*/
 
-	        // Filter points randomly
-	        if(samplingMethod == SamplingMethod.RandomSampling)
-	        {
-		        for(int i=0; i<colCount; i++)
-		        {
-			        float x = (float)r.NextDouble();
-			        if(x < ratio)
-			        {
-				        // Keep points with their descriptors
-				        int k = data.indices[first+i];
-				        // Mark the indices which will be part of the final data
-				        data.pointsToKeep.Add(new DataPoint
-                            {
-                                point = data.points[k].point,
-                                normal = normal,
-                            }); ;
-			        }
-		        }
-	        }
-	        else if (samplingMethod == SamplingMethod.Bin)
-	        {
-		        // Use the average and norm
-                data.pointsToKeep.Add(new DataPoint
+            // Filter points randomly
+            if (samplingMethod == SamplingMethod.RandomSampling)
+            {
+                for (int i = 0; i < colCount; i++)
+                {
+                    float x = (float)r.NextDouble();
+                    if (x < ratio)
                     {
-                        point = mean,
-                        normal = normal
-                    });
-	       }
+                        // Keep points with their descriptors
+                        int k = data.indices[first + i];
+                        // Mark the indices which will be part of the final data
+                        data.pointsToKeep.Add(new DataPoint
+                        {
+                            point = data.points[k].point,
+                            normal = normal,
+                        }); ;
+                    }
+                }
+            }
+            else if (samplingMethod == SamplingMethod.Bin)
+            {
+                // Use the average and norm
+                data.pointsToKeep.Add(new DataPoint
+                {
+                    point = mean,
+                    normal = normal
+                });
+            }
         }
 
-        Vector3 computeNormal(MathNet.Numerics.LinearAlgebra.Generic.Vector<Complex> eigenVa, Matrix<float> eigenVe)
+        Vector3 computeNormal(MathNet.Numerics.LinearAlgebra.Vector<Complex> eigenVa, Matrix<float> eigenVe)
         {
-	        // Keep the smallest eigenvector as surface normal
-	        int smallestId = 0;
-	        float smallestValue = float.MaxValue;
-	        for(int j = 0; j < eigenVe.ColumnCount; j++)
-	        {
+            // Keep the smallest eigenvector as surface normal
+            int smallestId = 0;
+            float smallestValue = float.MaxValue;
+            for (int j = 0; j < eigenVe.ColumnCount; j++)
+            {
                 float lambda = (float)eigenVa[j].Real;
                 if (lambda < smallestValue)
-		        {
-			        smallestId = j;
+                {
+                    smallestId = j;
                     smallestValue = lambda;
-		        }
-	        }
+                }
+            }
 
             var normalVector = eigenVe.Column(smallestId);
             return ToVector3(normalVector);
         }
 
-        private static Vector3 ToVector3(MathNet.Numerics.LinearAlgebra.Generic.Vector<float> v)
+        private static Vector3 ToVector3(MathNet.Numerics.LinearAlgebra.Vector<float> v)
         {
             return new Vector3(v[0], v[1], v[2]);
         }
@@ -288,12 +281,12 @@ namespace pointmatcher.net
         }
 
         struct BuildData
-		{			
-			public int[] indices;
+        {
+            public int[] indices;
             public DataPoint[] points;
             public int unfitPointsCount;
 
             public List<DataPoint> pointsToKeep;
-		}
+        }
     }
 }

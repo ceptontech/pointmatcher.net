@@ -1,13 +1,9 @@
-﻿using MathNet.Numerics.LinearAlgebra.Generic;
+﻿using MathNet.Numerics.LinearAlgebra;
 using MathNet.Numerics.LinearAlgebra.Single;
-using MathNet.Numerics.LinearAlgebra.Storage;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace pointmatcher.net
 {
@@ -99,41 +95,41 @@ namespace pointmatcher.net
         }
 
         private static ErrorElements GetMatchedPoints(
-		    DataPoints requestedPts,
-		    DataPoints sourcePts,
-		    Matches matches, 
-		    Matrix<float> outlierWeights)
+            DataPoints requestedPts,
+            DataPoints sourcePts,
+            Matches matches,
+            Matrix<float> outlierWeights)
         {
-	        Debug.Assert(matches.Ids.RowCount > 0);
-	        Debug.Assert(matches.Ids.ColumnCount > 0);
-	        Debug.Assert(matches.Ids.ColumnCount == requestedPts.points.Length); //nbpts
-	        Debug.Assert(outlierWeights.RowCount == matches.Ids.RowCount);  // knn
-	
-	        int knn = outlierWeights.RowCount;
-	        
+            Debug.Assert(matches.Ids.RowCount > 0);
+            Debug.Assert(matches.Ids.ColumnCount > 0);
+            Debug.Assert(matches.Ids.ColumnCount == requestedPts.points.Length); //nbpts
+            Debug.Assert(outlierWeights.RowCount == matches.Ids.RowCount);  // knn
+
+            int knn = outlierWeights.RowCount;
+
             int maxPointsCount = matches.Ids.RowCount * matches.Ids.ColumnCount;
 
             var keptPoints = new List<DataPoint>(maxPointsCount);
             var matchedPoints = new List<DataPoint>(maxPointsCount);
-	        List<float> keptWeights = new List<float>(maxPointsCount);
+            List<float> keptWeights = new List<float>(maxPointsCount);
 
-	        //float weightedPointUsedRatio = 0;
-	        for(int k = 0; k < knn; k++) // knn
-	        {
-		        for (int i = 0; i < requestedPts.points.Length; ++i) //nb pts
-		        {
-                    float weight = outlierWeights.At(k,i);
-			        if (weight != 0.0f)
-			        {
-				        keptPoints.Add(requestedPts.points[i]);
+            //float weightedPointUsedRatio = 0;
+            for (int k = 0; k < knn; k++) // knn
+            {
+                for (int i = 0; i < requestedPts.points.Length; ++i) //nb pts
+                {
+                    float weight = outlierWeights.At(k, i);
+                    if (weight != 0.0f)
+                    {
+                        keptPoints.Add(requestedPts.points[i]);
 
                         int matchIdx = matches.Ids.At(k, i);
                         matchedPoints.Add(sourcePts.points[matchIdx]);
-				        keptWeights.Add(weight);
-				        //weightedPointUsedRatio += weight;
-			        }
-		        }
-	        }
+                        keptWeights.Add(weight);
+                        //weightedPointUsedRatio += weight;
+                    }
+                }
+            }
 
             var result = new ErrorElements
             {
